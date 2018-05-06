@@ -1,0 +1,244 @@
+<!DOCATYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+      @import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body {
+      font-family: 'Droid Serif';
+      }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      img {
+        width: 100%;
+        height: auto;
+      }
+      img#logo {
+        width: 130px;
+        height: 54px;
+      }
+      ul, ol {
+        margin: 6px 0 6px 0;  
+      }
+      li {
+        margin: 0 0 12px 0;  
+      }
+      .remark-code, .remark-inline-code {
+      font-family: 'Ubuntu Mono';
+      font-size: 20px;
+      }
+      code.scala.hljs.remark-code {
+          background: #e6ffff;
+      }
+      code.rust.hljs.remark-code  {
+          background: #ffffe6;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Higher Kinded Types - Why You Should Care
+
+cody@koeninger.org
+
+https://koeninger.github.io/higher-kinded-why
+
+---
+
+#### Generic Types
+
+##### Scala
+```scala
+Option[T]
+```
+
+##### Rust
+```rust
+Option<T>
+```
+
+---
+
+#### Function Signatures
+
+```scala
+def add(x: Int, y: Int): Int
+```
+
+```rust
+fn add(x: i32, y: i32) -> i32
+```
+
+---
+
+#### First Class Functions
+
+```scala
+def filter(predicate: (A) => Boolean): List[A]
+```
+
+```rust
+fn filter<P>(self, predicate: P) -> Filter<Self, P>
+  where
+    P: FnMut(&Self::Item) -> bool
+```
+
+---
+
+#### Interfaces
+
+```scala
+trait ToJson[T] {
+  def toJsonStr(t: T): String
+}
+
+implicit object IntToJson extends ToJson[Int] { ... }
+
+implicit def ArrayToJson[T: ToJson] = new ToJson[Array[T]] { ... }
+```
+
+```rust
+trait ToJson {
+    fn to_json_str(&self) -> String;
+}
+
+impl ToJson for i32 { ... }
+
+impl<T: ToJson> ToJson for Vec<T> { ... }
+```
+---
+
+#### Real Example 1
+
+```scala
+def foo(x: Set[Placements], y: (Placement) => HostName): Set[HostName]
+
+
+def foo2(x: Array[Metrics], y: (Metric) => Score): Array[Score]
+```
+--
+```
+            F[A]                 (A) => B            F[B] 
+```            
+
+---
+#### Real Example 2
+
+```scala
+def foo(x: List[Lines], y: (Line) => List[Domains]): List[Domains]
+
+
+def foo2(x: Option[Int], y: (Int) => Option[Creative]): Option[Creative]
+```
+
+--
+
+```
+            F[A]              (A) => F[B]            F[B]
+```
+
+---
+#### Real Example 3
+
+```scala
+def foo(x: Set[Future[BidResponse]]): Future[Set[BidResponse]]
+
+
+def foo2(x: List[Result[FormField]]): Result[List[FormField]]
+```
+
+--
+```
+               F[G[A]]                   G[F[A]]
+```
+---
+
+#### Abstracting example 3
+
+```scala
+trait Gatherable[F] {
+  def gather[G, A](x: F[G[A]]): G[F[A]]
+}
+```
+
+--
+```
+[error] Gatherable.scala:2: G does not take type parameters
+[error]   def gather[G, A](x: F[G[A]]): G[F[A]]
+[error]                                 ^
+[error] Gatherable.scala:2: F does not take type parameters
+[error]   def gather[G, A](x: F[G[A]]): G[F[A]]
+[error]                       ^
+[error] two errors found
+```
+
+---
+#### Abstracting example 3
+
+```scala
+import scala.language.higherKinds
+
+trait Gatherable[F[_]] {
+  def gather[G[_], A](x: F[G[A]]): G[F[A]]
+}
+```
+--
+```
+[info] Compiling 1 Scala source to ...
+[success] Total time: 0 s
+```
+
+---
+#### What are higher kinds?
+
+```
+scala> :k -v Int
+Int's kind is A
+*
+This is a proper type.
+```
+---
+#### What are higher kinds?
+
+```
+scala> :k -v Array
+Array's kind is F[A]
+* -> *
+This is a type constructor: a 1st-order-kinded type.
+```
+---
+#### What are higher kinds?
+
+```
+scala> :k -v Array[Int]
+Array[Int]'s kind is A
+*
+This is a proper type.
+```
+---
+#### What are higher kinds?
+
+```
+scala> :k -v Gatherable
+Gatherable's kind is X[F[A]]
+(* -> *) -> *
+This is a type constructor that takes type constructor(s): a higher-kinded type.
+```
+
+    </textarea>
+    <script src="slides/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
