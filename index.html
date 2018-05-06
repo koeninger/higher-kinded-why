@@ -234,6 +234,61 @@ Gatherable's kind is X[F[A]]
 This is a type constructor that takes type constructor(s): a higher-kinded type.
 ```
 
+---
+#### Can we do this in Rust?
+
+```rust
+trait Gatherable<F> {
+  fn gather<G, A>(x: F<G<A>>) -> G<F<A>>;
+}
+
+```
+--
+```
+error[E0109]: type parameters are not allowed on this type
+ --> src/lib.rs:2:24
+  |
+2 |   fn gather<G, A>(x: F<G<A>>) -> G<F<A>>;
+  |                        ^^^^ type parameter not allowed
+
+error[E0109]: type parameters are not allowed on this type
+ --> src/lib.rs:2:36
+  |
+2 |   fn gather<G, A>(x: F<G<A>>) -> G<F<A>>;
+  |                                    ^^^^ type parameter not allowed
+```
+
+---
+#### Can we do this in Rust?
+
+```rust
+trait Gatherable {
+    type F<A>;
+}
+```
+
+--
+```
+error[E0658]: generic associated types are unstable (see issue #44265)
+ --> src/lib.rs:2:5
+  |
+2 |     type F<A>;
+  |     ^^^^^^^^^^
+  |
+  = help: add #![feature(generic_associated_types)] to the crate attributes to enable
+```         
+
+---
+#### Resources
+
+* https://github.com/rust-lang/rfcs/pull/1598
+* https://github.com/rust-lang/rust/issues/44265
+* http://smallcultfollowing.com/babysteps/blog/2016/11/09/associated-type-constructors-part-4-unifying-atc-and-hkt/
+
+
+
+
+
     </textarea>
     <script src="slides/remark-latest.min.js">
     </script>
